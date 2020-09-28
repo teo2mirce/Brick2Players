@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html>
+<head>
+<script src="https://code.jquery.com/jquery-1.10.2.js"></script>
+<title>Page Title</title>
+</head>
+
+
+
+<style>
+br {
+    display:block;
+    margin:0 0 1em;
+}
+
+table {border-collapse: collapse;}
+
+img{
+    display:block;
+    margin:0 auto;
+}
+//http://jsfiddle.net/LG68Q/2/
+</style>
+<script>
+
+function getRandomInt(min, max) {
+    min = Math.ceil(min);
+    max = Math.floor(max);
+    return Math.floor(Math.random() * (max - min + 1)) + min;
+}
+
+function Gravity()
+{
+	var CallAgain=false;
+					
+					
+					
+	$( "img" ).each(function() {
+		if(this.class=="W")	
+		{
+			var q=this.id.substring(1, this.id.length);
+			var spl=q.split('y');
+			var x=spl[0];
+			var y=spl[1];
+			
+			if(y>0)
+			{
+				var aboveObj=$("#x"+x+"y"+(y-1))[0];
+				if(aboveObj.class!="W")
+				{
+					CallAgain=true;
+					this.class=aboveObj.class;
+					aboveObj.class="W";
+					
+					this.src=aboveObj.src;
+					aboveObj.src="res//W.png";
+				}
+			}
+		}
+	});
+	for(var x=0;x<W-1;x++)
+	{
+		console.log("Again1?");
+		var AllWhite=true;
+		for(var y=0;y<H;y++)
+			if( $("#x"+x+"y"+y)[0].class != "W")
+				AllWhite=false;
+		
+		var AtLeastOneOnRight=false;
+		for(var y=0;y<H;y++)
+			if( $("#x"+(x+1)+"y"+y)[0].class != "W")
+				AtLeastOneOnRight=true;
+				
+		if(AllWhite && AtLeastOneOnRight)
+		{
+			CallAgain=true;
+			for(var y=0;y<H;y++)
+			{
+				var thx=$("#x"+x+"y"+y)[0];
+				var rightObj=$("#x"+(x+1)+"y"+y)[0];
+				
+				thx.class=rightObj.class;
+				rightObj.class="W";
+				
+				thx.src=rightObj.src;
+				rightObj.src="res//W.png";
+			}
+		}
+	}
+	
+	if(CallAgain)
+		Gravity();
+}
+function GetFlood(x,y)
+{
+	//console.log(x,y);
+	x=x|0;
+	y=y|0;
+	if(x<0 || y<0 || x==W || y==H)
+		return 0;
+	if( $("#x"+x+"y"+y)[0].class!=Player)
+		return 0;
+	if( $("#x"+x+"y"+y)[0].style.opacity!=1 )
+		return 0;
+	
+	
+	$("#x"+x+"y"+y)[0].style.opacity=0.5;
+	
+	var ret = 1;
+	
+	ret+=GetFlood(x-1,y);
+	ret+=GetFlood(x+1,y);
+	ret+=GetFlood(x,y-1);
+	ret+=GetFlood(x,y+1);
+	
+	return ret;
+	
+}
+
+function myFunction() {
+	$( "tr" ).remove();
+	$( "br" ).remove();
+	W=getRandomInt(20,40);
+	H=getRandomInt(20,40);
+	
+	
+	R=getRandomInt(1,2);
+	if(R==1)
+		Player="R";
+	else
+		Player="B";
+	
+	$("#Player").text("Player: "+Player);
+	
+	
+  
+	//tre lista de numere intre 0,h-1
+	Arr=[]
+	for(var i=0;i<W;i++)
+		Arr[i]=getRandomInt(0,H-1)
+		
+	for(var y=0;y<H;y++)
+	{
+		var TR = document.createElement( "tr" );
+		TR.id="Row"+y;
+		TR.style.borderSpacing=0;
+		
+		$('#Board').append(TR);
+		for(var x=0;x<W;x++)
+		{
+			var TD = document.createElement( "td" );
+			var IMG= document.createElement( "img" )
+			IMG.id="x"+x+"y"+y;
+			IMG.class="";
+			if(y<Arr[x])
+			{
+				IMG.src="res//W.png";
+				IMG.class="W";
+			}
+			else
+			{
+				R=getRandomInt(1,2);
+				if(R==1)
+				{
+					IMG.src="res//R.png";
+					IMG.class="R";
+				}
+				else
+				{
+					IMG.src="res//B.png";
+					IMG.class="B";
+				}
+			}
+			
+
+			TD.append(IMG);
+			TR.append(TD);
+		}
+		
+	}
+		
+	console.log(Arr);
+	  
+	$("img").hover(function()
+	{
+		$('img').css("opacity","1");
+		
+		var obj=$("#"+this.id)[0];
+		if(obj.class==Player)
+		{
+			var q=this.id.substring(1, this.id.length);
+			var spl=q.split('y');
+			var x=spl[0];
+			var y=spl[1];
+			
+			var cate=GetFlood(x,y);
+			if( cate < 3)
+			{
+				$('img').css("opacity","1");
+				return;
+			}
+		}
+	});
+	$("img").click(function()
+	{
+		$('img').css("opacity","1");
+		
+		var obj=$("#"+this.id)[0];
+		if(obj.class==Player)
+		{
+			var q=this.id.substring(1, this.id.length);
+			var spl=q.split('y');
+			var x=spl[0];
+			var y=spl[1];
+			
+			var cate=GetFlood(x,y);
+			if( cate < 3)
+			{
+				$('img').css("opacity","1");
+				return;
+			}
+			else
+			{
+				//care au opacity != 1 devin white
+				$( "img" ).each(function() {
+					if(this.style.opacity!=1)	
+					{
+						this.class="W";
+						this.src="res//W.png";
+					}
+				});
+				Gravity();
+				
+				$('img').css("opacity","1");
+				
+				if (Player=="R")
+					Player="B";
+				else
+					Player="R";
+					
+				$("#Player").text("Player: "+Player);
+				
+			}
+		}
+	});
+}
+</script>
+
+<body>
+
+<button onclick="myFunction()">Click me</button>
+<p id="Player">Player: </p>
+<table id="Board"></table>
+
+</body>
+</html>
